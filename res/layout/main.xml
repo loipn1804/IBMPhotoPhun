@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:orientation="vertical"
+    android:layout_width="fill_parent"
+    android:layout_height="fill_parent"
+    android:background="#ffffffff"
+    >
+<LinearLayout
+    android:orientation="horizontal"
+    android:layout_width="fill_parent"
+    android:layout_height="wrap_content"
+    android:gravity="center"
+    
+    > 
+        
+<Button
+	android:layout_width="wrap_content"
+	android:layout_height="wrap_content"
+	android:id="@+id/btnReset"
+	android:text="Reset"
+	android:visibility="visible"
+	android:onClick="onResetImage"
+/>
+<Button
+	android:layout_width="wrap_content"
+	android:layout_height="wrap_content"
+	android:id="@+id/btnConvert"
+	android:text="Convert Image"
+	android:visibility="visible"
+	android:onClick="onConvertToGray"
+/>
+<Button
+	android:layout_width="wrap_content"
+	android:layout_height="wrap_content"
+	android:id="@+id/btnFindEdges"
+	android:text="Find Edges"
+	android:visibility="visible"
+	android:onClick="onFindEdges"
+/>
+<Button
+	android:layout_width="wrap_content"
+	android:layout_height="wrap_content"
+	android:id="@+id/btnDimmer"
+	android:text="- "
+	android:visibility="visible"
+	android:onClick="onDimmer"
+/>
+<Button
+	android:layout_width="wrap_content"
+	android:layout_height="wrap_content"
+	android:id="@+id/btnBrighter"
+	android:text=" +"
+	android:visibility="visible"
+	android:onClick="onBrighter"
+/>
+</LinearLayout>
+<ImageView
+	android:layout_width="wrap_content"
+	android:layout_height="wrap_content"
+	android:scaleType="centerCrop"
+	android:layout_gravity="center_vertical|center_horizontal"
+	android:id="@+id/ivDisplay"
+
+/>
+</LinearLayout>

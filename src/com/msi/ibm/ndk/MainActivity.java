@@ -6,6 +6,8 @@ import android.graphics.Bitmap.Config;
 import android.graphics.BitmapFactory;
 import android.os.Bundle;
 import android.os.Handler;
+import android.os.Looper;
+import android.os.Message;
 import android.util.Log;
 import android.widget.FrameLayout;
 import android.widget.ImageView;
@@ -23,15 +25,26 @@ public class MainActivity extends Activity {
 
 	private ImageView ivDisplay = null;
 
+	byte[] in;
+	int[] out;
+
+	Thread thread;
+	MyThread myThread;
+
+	LooperThread looperThread;
+	boolean stop;
+	
+	Toast toast;
+
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.activity_main);
 		ivDisplay = (ImageView) findViewById(R.id.imageView);
 
-		// frameCamera = (FrameLayout) findViewById(R.id.frameCamera);
-		// frameCamera.addView(new CameraSurfaceView(this, ivDisplay,
-		// myCallback));
+		 frameCamera = (FrameLayout) findViewById(R.id.frameCamera);
+		 frameCamera.addView(new CameraSurfaceView(this, ivDisplay,
+		 myCallback));
 
 		// // load bitmap from resources
 		// BitmapFactory.Options options = new BitmapFactory.Options();
@@ -47,44 +60,59 @@ public class MainActivity extends Activity {
 		//
 		// ivDisplay.setImageBitmap(bitmapWip);
 		// }
+		
+		toast = Toast.makeText(this, "", Toast.LENGTH_SHORT);
 
-//		Handler handler = new Handler();
-//		handler.post(runnable);
-		 Thread thread = new Thread(runnable);
-		 thread.start();
+		in = new byte[4];
+		in[0] = 1;
+		in[1] = 2;
+		in[2] = 3;
+		in[3] = 4;
+		out = new int[4];
 		
-//		String msg = "";
-//		byte[] in = new byte[4];
-//		in[0] = 1;
-//		in[1] = 2;
-//		in[2] = 3;
-//		in[3] = 4;
-//		int[] out = new int[4];
-//		Test2(out, in, 2, 2);
-//		for (int i = 0; i < 4; i++) {
-//			msg += out[i] + "";
-//		}
-//		Log.i("runnable", msg);
-		
-//		YUVtoRBG(out, in, 2, 2);
+		stop = false;
+		// Handler handler = new Handler();
+		// handler.post(runnable);
+//		thread = new Thread(runnable);
+//		thread.start();
+//		myThread = new MyThread();
+//		myThread.start();
+//		 looperThread = new LooperThread();
+//		 looperThread.start();
+
+		// Test2(out, in, 2, 2);
+		// String msg = "";
+		// for (int i = 0; i < 4; i++) {
+		// msg += out[i] + ".";
+		// }
+		// Log.i("runnable", msg);
+
+		// YUVtoRBG(out, in, 2, 2);
+
+		// Toast.makeText(this, Test(), Toast.LENGTH_LONG).show();
+		 
+//		 new Handler().postDelayed(new Runnable() {
+//			
+//			@Override
+//			public void run() {
+//				// TODO Auto-generated method stub
+//				looperThread.notify();
+//			}
+//		}, 5000);
 	}
 
 	private Runnable runnable = new Runnable() {
 
 		@Override
 		public void run() {
-			String msg = "";
-			byte[] in = new byte[4];
-			in[0] = 1;
-			in[1] = 2;
-			in[2] = 3;
-			in[3] = 4;
-			int[] out = new int[4];
-			Test2(out, in, 2, 2);
-			for (int i = 0; i < 4; i++) {
-				msg += out[i] + "/";
+			while (!stop) {
+//				Test2(out, in, 2, 2);
+				String msg = "";
+				for (int i = 0; i < 4; i++) {
+					msg += in[i] + "+" + out[i] + ",";
+				}
+				Log.i("runnable", msg);
 			}
-			Log.i("runnable", msg);
 		}
 	};
 
@@ -105,10 +133,106 @@ public class MainActivity extends Activity {
 	public native void YUVtoRBG(int[] rgb, byte[] yuv, int width, int height);
 
 	public native String messageFromNativeCode();
-	
+
 	public native void Test2(int[] rgb, byte[] yuv, int width, int height);
 
 	public native String Test();
 
 	// END NDK STUFF
+
+	@Override
+	protected void onDestroy() {
+		// TODO Auto-generated method stub
+		super.onDestroy();
+		stop = true;
+		if (thread != null) {
+			thread.interrupt();
+			thread = null;
+			Log.i("runnable", "Destroy thread");
+		}
+		if (myThread != null) {
+			myThread.interrupt();
+			myThread = null;
+			Log.i("runnable", "Destroy myThread");
+		}
+		if (looperThread != null) {
+			looperThread.interrupt();
+			looperThread = null;
+			Log.i("runnable", "Destroy looperThread");
+		}
+	}
+
+	class LooperThread extends Thread {
+		public Handler mHandler;
+
+		@Override
+		public void run() {
+			super.run();
+			while (!stop) {
+				Looper.prepare();
+
+				mHandler = new Handler() {
+					public void handleMessage(Message msg) {
+						// process incoming messages here
+					}
+				};
+				mHandler.post(new Runnable() {
+					
+					@Override
+					public void run() {
+						// TODO Auto-generated method stub
+						Log.i("runnable", "post");
+						Looper.myLooper().quit();
+					}
+				});
+
+				try {
+					sleep(1000);
+				} catch (InterruptedException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
+				if (stop) {
+					return;
+				}
+
+//				Test2(out, in, 2, 2);
+				String msg = "";
+				for (int i = 0; i < 4; i++) {
+					msg += out[i] + ",";
+				}
+				Log.i("runnable", msg);
+
+				Looper.loop();
+			}
+		}
+	}
+	
+	class MyThread extends Thread {
+		@Override
+		public void run() {
+			// TODO Auto-generated method stub
+			super.run();
+			while (!stop) {
+				try {
+					Thread.sleep(1000);
+				} catch (InterruptedException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
+				if (stop) {
+					return;
+				}
+				Test2(out, in, 2, 2);
+				String msg = "";
+				for (int i = 0; i < 4; i++) {
+					msg += in[i] + "+" + out[i] + ",";
+					in[i]++;
+				}
+				Log.i("runnable", msg);
+//				toast.setText(in[0] + "");
+//				toast.show();
+			}
+		}
+	}
 }

@@ -3,6 +3,8 @@ package com.msi.ibm.ndk;
 import java.io.ByteArrayOutputStream;
 import java.util.List;
 
+import com.msi.ibm.ndk.MainActivity.MyThread;
+
 import thread.UIThreadExecutor;
 
 import android.app.Activity;
@@ -60,8 +62,8 @@ public class CameraSurfaceView extends SurfaceView implements
 	private int PreviewSizeWidth;
 	private int PreviewSizeHeight;
 
-	int width = 640;
-	int height = 480;
+	int width = 1024;
+	int height = 768;
 
 	int[] rgba;
 	Bitmap bmp;
@@ -71,7 +73,12 @@ public class CameraSurfaceView extends SurfaceView implements
 	
 	String sTemp = "";
 
-	// Handler mHandler = new Handler(Looper.getMainLooper());
+	Handler mHandler = new Handler(Looper.getMainLooper());
+	
+	MyThread myThread;
+	boolean stop;
+	byte[] in;
+	int[] out;
 
 	// NDK STUFF
 	static {
@@ -88,6 +95,8 @@ public class CameraSurfaceView extends SurfaceView implements
 	public native void YUVtoRBGTest(int[] rgb, byte[] yuv, int width, int height);
 	
 	public native void writeArray(byte[] in, byte[] out, int width, int height);
+	
+	public native void Test2(int[] rgb, byte[] yuv, int width, int height);
 
 	public native String messageFromNativeCode();
 
@@ -115,13 +124,13 @@ public class CameraSurfaceView extends SurfaceView implements
 		data_temp = new byte[width * height];
 		bmp = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888);
 
-		// startCameraWithThread();
+//		startCameraWithThread();
 		startCameraWithoutThread();
 	}
 
 	private void startCameraWithThread() {
 		if (mCameraThread == null) {
-			mCameraThread = new HandlerThread("CAMERA_THREAD_NAME");
+			mCameraThread = new HandlerThread("CAMERA_THREAD_NAME", Thread.MAX_PRIORITY);
 			mCameraThread.start();
 			mCameraHandler = new Handler(mCameraThread.getLooper());
 		}
@@ -216,6 +225,23 @@ public class CameraSurfaceView extends SurfaceView implements
 
 //		mThread = new Thread(new CameraWorker());
 //		mThread.start();
+		
+		in = new byte[4];
+		in[0] = 1;
+		in[1] = 2;
+		in[2] = 3;
+		in[3] = 4;
+		out = new int[4];
+		stop = false;
+		myThread = new MyThread();
+		myThread.start();
+//		Test2(out, in, 2, 2);
+//		String msg = "";
+//		for (int i = 0; i < 4; i++) {
+//			msg += in[i] + "+" + out[i] + ",";
+//			in[i]++;
+//		}
+//		Log.i("runnable", msg);
 	}
 
 	@Override
@@ -263,6 +289,13 @@ public class CameraSurfaceView extends SurfaceView implements
 //			e.printStackTrace();
 //		}
 //		mThread = null;
+		
+		stop = true;
+		if (myThread != null) {
+			myThread.interrupt();
+			myThread = null;
+			Log.i("runnable", "Destroy myThread");
+		}
 	}
 
 	private PreviewCallback previewCallback = new PreviewCallback() {
@@ -275,14 +308,22 @@ public class CameraSurfaceView extends SurfaceView implements
 //				bmp.setPixels(rgba, 0/* offset */, width /* stride */, 0, 0, width,
 //						height);
 //				imageView.setImageBitmap(bmp);
-//				MyAsyn asyn = new MyAsyn();
-//				asyn.execute(data);
+////				MyAsyn asyn = new MyAsyn();
+////				asyn.execute(data);
 				isHaveFrame = true;
 			}
-			
+//			if (!bProcessing) {
+//				data_temp = data;
+////				mHandler.post(DoImageProcessing);
+//			      bProcessing = true;
+//				YUVtoRBG(rgba, data_temp, width, height);
+//				bmp.setPixels(rgba, 0/* offset */, width /* stride */, 0, 0, width,
+//						height);
+//				mHandler.post(DoImageProcessing);
+//		      bProcessing = false;
+//			}
 //			final Bitmap bmp = Bitmap.createBitmap(width, height,
 //					Bitmap.Config.ARGB_8888);
-//			writeArray(data, data_temp);
 //			data_temp = data;
 //			YUVtoRBG(rgba, data_temp, width, height);
 //			bmp.setPixels(rgba, 0/* offset */, width /* stride */, 0, 0, width,
@@ -365,6 +406,55 @@ public class CameraSurfaceView extends SurfaceView implements
 			YUVtoRBGTest(rgba, data, width, height);
 			return null;
 		}
-		
 	}
+	
+	private Runnable DoImageProcessing = new Runnable() 
+	  {
+	    public void run() 
+	    {
+//	      bProcessing = true;
+//			YUVtoRBG(rgba, data_temp, width, height);
+//			bmp.setPixels(rgba, 0/* offset */, width /* stride */, 0, 0, width,
+//					height);
+			imageView.setImageBitmap(bmp);
+//	      bProcessing = false;
+	      
+	      	long now = System.currentTimeMillis();
+	   		Log.i("DoImageProcessing", "run-" + (now - startTime));
+	   		startTime = now;
+	    }
+	  };
+	  
+	  class MyThread extends Thread {
+			@Override
+			public void run() {
+				// TODO Auto-generated method stub
+				super.run();
+				while (!stop) {
+					try {
+						Thread.sleep(1000);
+					} catch (InterruptedException e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+					}
+					if (stop) {
+						return;
+					}
+					if (isHaveFrame) {
+	//					Test2(out, in, 2, 2);
+//						YUVtoRBG(out, in, 2, 2);
+						YUVtoRBG(rgba, data_temp, 514, 514);
+						String msg = "";
+						for (int i = 0; i < 4; i++) {
+							msg += in[i] + "+" + rgba[i] + ",";
+							in[i]++;
+						}
+						Log.i("runnable", msg);
+	//					toast.setText(in[0] + "");
+	//					toast.show();
+						isHaveFrame = false;
+					}
+				}
+			}
+		}
 }

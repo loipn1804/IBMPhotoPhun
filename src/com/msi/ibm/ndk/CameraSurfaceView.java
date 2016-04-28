@@ -18,6 +18,7 @@ import android.graphics.Bitmap.Config;
 import android.hardware.Camera;
 import android.hardware.Camera.PreviewCallback;
 import android.hardware.Camera.Size;
+import android.os.AsyncTask;
 import android.os.Handler;
 import android.os.HandlerThread;
 import android.os.Looper;
@@ -59,8 +60,8 @@ public class CameraSurfaceView extends SurfaceView implements
 	private int PreviewSizeWidth;
 	private int PreviewSizeHeight;
 
-	int width = 1280;
-	int height = 720;
+	int width = 640;
+	int height = 480;
 
 	int[] rgba;
 	Bitmap bmp;
@@ -84,6 +85,7 @@ public class CameraSurfaceView extends SurfaceView implements
 	public native void findEdges(Bitmap bitmapIn, Bitmap bitmapOut);
 
 	public native void YUVtoRBG(int[] rgb, byte[] yuv, int width, int height);
+	public native void YUVtoRBGTest(int[] rgb, byte[] yuv, int width, int height);
 	
 	public native void writeArray(byte[] in, byte[] out, int width, int height);
 
@@ -212,8 +214,8 @@ public class CameraSurfaceView extends SurfaceView implements
 
 		surfaceHolder.addCallback(this);
 
-		mThread = new Thread(new CameraWorker());
-		mThread.start();
+//		mThread = new Thread(new CameraWorker());
+//		mThread.start();
 	}
 
 	@Override
@@ -254,13 +256,13 @@ public class CameraSurfaceView extends SurfaceView implements
 		camera.release();
 		camera = null;
 
-		try {
-			mThread.join();
-		} catch (InterruptedException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-		mThread = null;
+//		try {
+//			mThread.join();
+//		} catch (InterruptedException e) {
+//			// TODO Auto-generated catch block
+//			e.printStackTrace();
+//		}
+//		mThread = null;
 	}
 
 	private PreviewCallback previewCallback = new PreviewCallback() {
@@ -269,10 +271,12 @@ public class CameraSurfaceView extends SurfaceView implements
 		public void onPreviewFrame(final byte[] data, Camera camera) {
 			if (!isHaveFrame) {
 				data_temp = data;
-				YUVtoRBG(rgba, data_temp, width, height);
-				bmp.setPixels(rgba, 0/* offset */, width /* stride */, 0, 0, width,
-						height);
-				imageView.setImageBitmap(bmp);
+//				YUVtoRBG(rgba, data_temp, width, height);
+//				bmp.setPixels(rgba, 0/* offset */, width /* stride */, 0, 0, width,
+//						height);
+//				imageView.setImageBitmap(bmp);
+//				MyAsyn asyn = new MyAsyn();
+//				asyn.execute(data);
 				isHaveFrame = true;
 			}
 			
@@ -327,7 +331,7 @@ public class CameraSurfaceView extends SurfaceView implements
 	private class CameraWorker implements Runnable {
 
 		@Override
-		public void run() {
+		public synchronized void run() {
 			final String abc = messageFromNativeCode();
 			
 			UIThreadExecutor.getInstance().runOnUIThread(new Runnable() {
@@ -344,13 +348,23 @@ public class CameraSurfaceView extends SurfaceView implements
 					// TODO Auto-generated catch block
 					e.printStackTrace();
 				}
-				byte[] data = null;
 				if (isHaveFrame && !isRunAlready) {
-					YUVtoRBG(rgba, data_temp, width, height);
+					YUVtoRBGTest(rgba, data_temp, width, height);
 //					isHaveFrame = false;
 					isRunAlready = true;
 				}
 			}
 		}
+	}
+	
+	private class MyAsyn extends AsyncTask<byte[], Void, Void> {
+
+		@Override
+		protected synchronized Void doInBackground(byte[]... arg0) {
+			byte[] data = arg0[0];
+			YUVtoRBGTest(rgba, data, width, height);
+			return null;
+		}
+		
 	}
 }

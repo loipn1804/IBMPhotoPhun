@@ -29,8 +29,9 @@ public class MainActivity extends Activity {
 		setContentView(R.layout.activity_main);
 		ivDisplay = (ImageView) findViewById(R.id.imageView);
 
-		frameCamera = (FrameLayout) findViewById(R.id.frameCamera);
-		frameCamera.addView(new CameraSurfaceView(this, ivDisplay, myCallback));
+		// frameCamera = (FrameLayout) findViewById(R.id.frameCamera);
+		// frameCamera.addView(new CameraSurfaceView(this, ivDisplay,
+		// myCallback));
 
 		// // load bitmap from resources
 		// BitmapFactory.Options options = new BitmapFactory.Options();
@@ -47,25 +48,46 @@ public class MainActivity extends Activity {
 		// ivDisplay.setImageBitmap(bitmapWip);
 		// }
 
-		
-
 //		Handler handler = new Handler();
 //		handler.post(runnable);
-		Thread thread = new Thread(runnable);
-		thread.start();
-	}
-	
-	private Runnable runnable = new Runnable() {
+		 Thread thread = new Thread(runnable);
+		 thread.start();
 		
+//		String msg = "";
+//		byte[] in = new byte[4];
+//		in[0] = 1;
+//		in[1] = 2;
+//		in[2] = 3;
+//		in[3] = 4;
+//		int[] out = new int[4];
+//		Test2(out, in, 2, 2);
+//		for (int i = 0; i < 4; i++) {
+//			msg += out[i] + "";
+//		}
+//		Log.i("runnable", msg);
+		
+//		YUVtoRBG(out, in, 2, 2);
+	}
+
+	private Runnable runnable = new Runnable() {
+
 		@Override
 		public void run() {
-			// TODO Auto-generated method stub
-			messageFromNativeCode();
-//			Toast.makeText(MainActivity.this, messageFromNativeCode(), Toast.LENGTH_SHORT).show();
-//			Toast.makeText(MainActivity.this, "runable thread", Toast.LENGTH_SHORT).show();
+			String msg = "";
+			byte[] in = new byte[4];
+			in[0] = 1;
+			in[1] = 2;
+			in[2] = 3;
+			in[3] = 4;
+			int[] out = new int[4];
+			Test2(out, in, 2, 2);
+			for (int i = 0; i < 4; i++) {
+				msg += out[i] + "/";
+			}
+			Log.i("runnable", msg);
 		}
 	};
-	
+
 	private MyCallback myCallback = new MyCallback() {
 
 		@Override
@@ -83,6 +105,10 @@ public class MainActivity extends Activity {
 	public native void YUVtoRBG(int[] rgb, byte[] yuv, int width, int height);
 
 	public native String messageFromNativeCode();
+	
+	public native void Test2(int[] rgb, byte[] yuv, int width, int height);
+
+	public native String Test();
 
 	// END NDK STUFF
 }

@@ -62,8 +62,8 @@ public class CameraSurfaceView extends SurfaceView implements
 	private int PreviewSizeWidth;
 	private int PreviewSizeHeight;
 
-	int width = 800;
-	int height = 600;
+	int width = 1024;
+	int height = 768;
 
 	int[] rgba;
 	Bitmap bmp;
@@ -344,7 +344,7 @@ public class CameraSurfaceView extends SurfaceView implements
 			 bmp.setPixels(rgba, 0/* offset */, width /* stride */, 0, 0,
 			 width,
 			 height);
-			 imageView.setImageBitmap(bmp);
+//			 imageView.setImageBitmap(bmp);
 			
 			 long now = System.currentTimeMillis();
 			 Log.i("onPreviewFrame", "run-" + (now - startTime));
